@@ -1,0 +1,186 @@
+#pragma once
+#include<vector>
+#include<iostream>
+using namespace std;
+
+//可以先把vector创建好，然后再压入进去，而不是先压入再修改
+//疑问：在函数中创建的一个变量，为什么能够返回？
+
+
+/*	Version 01
+ *	
+ *	这个程序是完成的最初版本，存在大量错误：
+ *	一、if中使用了赋值语句，并且赋值为0，判断结果为false，导致vector中没有添加元素，之后必然出现访问越界
+ *	二、原本考虑到j>i/2的时候，可以使用赋值替代和的计算，但是增加了i、j的关系判断，性能上基本没有提升，却增大了代码量，
+ *		增加了if判断条件错误的可能性。这也是由先压vector再修改，还是一次正确压入所决定的。更主要的原因是不记得如何设立给定
+ *		规模的vector。		vector<type> name(n,i):创建包含n个type类型、值为i的元素的vector
+ *
+ */
+
+//class Solution {
+//public:
+//	vector<vector<int>> generate(int numRows) {
+//		vector<vector<int>> result;
+//		for (int i = 0; i < numRows; ++i) {
+//			vector<int> temp;
+//			for (int j = 0; j <= i; ++j) {
+//				if (j = 0)							//此处的j=0导致的结果是什么？判断为false
+//					temp.push_back(1);
+//				else if (j <= i / 2)
+//					temp.push_back(result[i - 1][j - 1] + result[i - 1][j]);
+//				else if (j <= i)
+//					temp.push_back(temp[i - j]);
+//			}
+//			result.push_back(temp);
+//		}
+//		return result;
+//	}
+//};
+
+
+/*	Version 02
+ *
+ *	Version 01的精简版本
+ *
+ */
+
+//class Solution {
+//public:
+//	vector<vector<int>> generate(int numRows) {
+//		vector<vector<int>> result;
+//		for (int i = 0; i < numRows; ++i) {
+//			vector<int> temp;
+//			for (int j = 0; j <= i; ++j) {
+//				if (j == 0)							
+//					temp.push_back(1);
+//				else if (j <= i / 2)
+//					temp.push_back(result[i - 1][j - 1] + result[i - 1][j]);
+//				else
+//					temp.push_back(temp[i - j]);
+//			}
+//			result.push_back(temp);
+//		}
+//		return result;
+//	}
+//};
+
+
+/*	Version 03
+ *
+ *	完全使用和计算，不采用赋值
+ *
+ */
+
+//class Solution {
+//public:
+//	vector<vector<int>> generate(int numRows) {
+//		vector<vector<int>> result;
+//		for (int i = 0; i < numRows; ++i) {
+//			vector<int> temp;
+//			for (int j = 0; j <= i; ++j) {
+//				if (j == 0)
+//					temp.push_back(1);
+//				else if (j >= 1 && j < i)
+//					temp.push_back(result[i - 1][j - 1] + result[i - 1][j]);
+//				else
+//					temp.push_back(1);
+//			}
+//			result.push_back(temp);
+//		}
+//		for (auto c : result) {
+//			for (auto a : c)
+//				cout << a << " ";
+//			cout << endl;
+//		}
+//		return result;
+//	}
+//};
+
+
+/*	Version 04
+ *
+ *	仿照之后的05 06两个程序完成，出现一个细小的问题导致访问越界
+ *	如果可以，应该尽可能的缩小下标的访问范围以减小难以察觉的错误，尤其是访问越界，
+ *	该程序中的j使用了不当的访问范围
+ *
+ */
+
+//class Solution {
+//public:
+//	vector<vector<int>> generate(int numRows) {
+//		vector<vector<int>> result;
+//		for (int i = 0; i < numRows; ++i) {
+//			vector<int> temp(i + 1, 1);
+//			result.push_back(temp);
+//			//此处j<i才对，访问result[m][n]的必要条件时m>=n,因此访问result[i-1][j]的
+//			//必要条件时i-1>=j,i.e.j<i
+//			for (int j = 1; j <= i; ++j)	
+//				result[i][j] = result[i - 1][j - 1] + result[i - 1][j];
+//		}
+//		for (auto a : result) {
+//			for (auto c : a)
+//				cout << c << " ";
+//			cout << endl;
+//		}
+//		return result;
+//	}
+//};
+
+/*	Version 05
+ *
+ *	该版本与下一版本均为他人编写，以供学习其他知识，输出的地址如下：
+ *	004FF940
+ *	004FF940
+ *	004FF940
+ *	004FF940
+ *	004FF940
+ *	00669FD8
+ *	00669FE8
+ *	00669FF8
+ *	0066A008
+ *	0066A018
+ *
+ *	可以看出，pushback完成的是浅拷贝，push_back到result的并不是temp本身，而是temp所对应的值们。
+ *	所以对temp[j]造成的改动并不影响result找个vector。
+ *
+ *	pushback 完成的是值的拷贝，而不是拷贝&temp，即不是拷贝的地址。
+ *
+ *	疑惑：temp的值和其中的数值的存储位置不同，&temp到底代表了什么？
+ *		：为什么&temp每次输出的结果都是同一个,是因为temp放在栈里，每次释放掉之后，又从原位置继续建立一个新的temp吗？
+ *
+ */
+
+//class Solution {
+//public:
+//	vector<vector<int>> generate(int numRows) {
+//		vector<vector<int>> result;					
+//		for (int i = 0; i<numRows; ++i) {
+//			vector<int> temp(i + 1, 1);
+//			result.push_back(temp);					//temp的值是什么，代表了什么？
+//			cout << &temp << endl;		
+//			for (int j = 1; j < i; ++j)
+//				temp[j] = result[i - 1][j - 1] + result[i - 1][j];
+//		}
+//		return result;
+//	}
+//};
+
+//Version 06
+
+class Solution {
+public:
+	vector<vector<int>> generate(int numRows) {
+		vector<vector<int>> result;
+		for (int i = 0; i<numRows; ++i) {
+			vector<int> temp(i + 1, 1);
+			result.push_back(temp);
+			cout << &temp << endl;
+			for (int i = 0; i < temp.size(); ++i)
+				cout << &temp[i] << " ";
+			cout << endl;
+			for (int j = 1; j<i; ++j)
+				result[i][j] = result[i - 1][j - 1] + result[i - 1][j];
+		}
+		return result;
+	}
+};
